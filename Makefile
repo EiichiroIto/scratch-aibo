@@ -11,7 +11,7 @@
 
 LANG=
 LANGUAGE=
-COMPONENTS=Brain MoNet MotionAgents Vision Face GameController PowerMonitor SensorServer WebControl
+COMPONENTS=Brain MoNet MotionAgents Vision Face PowerMonitor SensorServer WebControl
 INSTALLDIR=$(shell pwd)/MS
 TARGETS=all install clean
 RELEASEDIR=/defart/release
