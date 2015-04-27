@@ -1,0 +1,82 @@
+Defart/AIBO  a Robot Programming Environment for AIBO
+Copyright (C) 2005-2007 Eiichiro ITO
+
+                                                          Eiichiro ITO
+                                                      e-itoh@ygu.ac.jp
+                                                 http://www.itolab.com
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+0. 注意事項
+
+　このソフトウェアは無保証です。本ソフトウェアの作者はソフトウェアを使
+用することによって生じたいかなる損害についても責任を持ちません。
+Defart/PCシステムは、Defart/AIBOを組み込んだAIBOとともに動作します。ど
+ちらのシステムもパソコンやAIBOに致命的なダメージを与える恐れがあります。
+ご利用にあたっては、その危険性を十分に理解した上で、自己責任で利用する
+ようにしてください。
+
+1. 必要なシステム
+
+  AIBOでプログラムを作成するのに必要なものを予めインストールし、サンプ
+ルプログラムなどのビルドが可能なことを確認しておいてください。
+
+1.1. クロスコンパイル環境関連
+　OPEN/R SDKのドキュメントに従って準備してください。
+
+1.2. OPEN_R_SDK関連
+　OPEN_R_SDK-1.1.5-r1.tar.gz
+
+2. ビルド方法
+
+2.1. Defart/AIBOの展開
+
+ DefartAiboXXyZ.tgz
+  適当なフォルダに展開してください。
+　ファイル名のXXはバージョン番号、yはサブバージョンを表す記号、Zはパッ
+　チ識別番号です。
+
+2.2. Defart/AIBOの構築
+
+ DefartAiboXXyZのフォルダに移動してビルドします。
+
+ ERS-7の場合
+
+-- cd DefartAiboXXyZ
+-- . setup7.sh
+-- make install
+
+ ERS-210の場合
+
+-- cd DefartAiboXXyZ
+-- . setup210.sh
+-- make install
+
+2.3. Defart/AIBOの組み込み
+
+　あらかじめOPEN/R SDKのwconsoleサンプルの内容をメモリスティックにコピー
+しておき、そのあとでビルドしたフォルダ内のMS/OPEN-Rフォルダの内容をメ
+モリスティックにコピーしてください
+
+3. 使い方など
+
+  伊藤研究室のホームページ（http://wiki.itolab.com）を参照してください。
+
+4. ライセンス
+
+　一部のソースにSony OPEN/R SDKのサンプルプログラムを含んでいます。
+　それ以外の部分のライセンスは「GNU GENERAL PUBLIC LICENSE」となります。
+
+以上

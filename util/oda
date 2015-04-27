@@ -1,0 +1,178 @@
+#!/usr/bin/perl
+#
+# Copyright 2002 Sony Corporation 
+#
+# Permission to use, copy, modify, and redistribute this software for
+# non-commercial use is hereby granted.
+#
+# This software is provided "as is" without warranty of any kind,
+# either expressed or implied, including but not limited to the
+# implied warranties of fitness for a particular purpose.
+#
+$| = 1;
+
+#----- set default options -----
+$message        = "usage: oda option odafile [ files ]\n\n"
+                . "option:\n"
+                . "  -c     create\n"
+                . "  -a     add\n"
+                . "  -x     extract\n"
+                . "  -l     list\n"
+                . "  -h     help\n";
+
+use Getopt::Std;
+getopts('caxlh');
+die $message if @ARGV <= 0;
+die $message unless ($opt_c || $opt_a || $opt_x || $opt_l || $opt_h);
+die $message if ($opt_h);
+
+$GZIP_MAGIC   = pack("c2", 0x1f, 0x8b);
+
+%MAGIC = ('wav', "WAVE",
+          'mid', "MIDI",
+          'syn', "SYN\0",
+          'mtn', "OMTN",
+          'led', "LED\0");
+
+$tablesize = 144;
+
+$major_version = 0;
+$minor_version = 3;
+
+$size = 0;
+#----- main -----
+
+if($opt_a || $opt_x || $opt_l)
+{
+    #----- extract -----
+    die $message if @ARGV <= 0;
+    open(FILE, $ARGV[0]) || die "can't open $ARGV[0] :$!\n";
+    binmode FILE;
+    read(FILE, $magic, 2, 0);
+    close(FILE);
+            
+    if ( $magic ne $GZIP_MAGIC )
+    {
+        open(IN, $ARGV[0]);
+    }
+    else
+    {
+        open(IN, "zcat $ARGV[0]|");
+    }
+    binmode IN;
+   
+    #----- check header -----
+    read(IN, $tmp, 4);
+    die "no ODA file" if (!($tmp eq "ODAR"));
+    read(IN, $tmp, 4);
+    read(IN, $tmp, 4);
+    $num = unpack("V", $tmp);
+    read(IN, $tmp, 4);
+    die "unknown format" if ($tablesize != unpack("V", $tmp));
+    read(IN, $tmp, 48);
+
+    %REVMAGIC = reverse(%MAGIC);
+    for ($i = 0; $i < $num; $i++)
+    {
+        read(IN, $tmp, 4);
+        $filemagic[$i] = $REVMAGIC{$tmp};
+        read(IN, $tmp, 128);
+        $filename[$i] = unpack("a128", $tmp);
+        $filename[$i] =~ s/\0+//;
+        read(IN, $tmp, 4);
+        read(IN, $tmp, 4);
+        $filesize[$i] = unpack("V", $tmp);
+        read(IN, $tmp, 4);
+    }
+
+    for ($i = 0; $i < $num; $i++)
+    {
+        if ($opt_l)
+        {
+            printf("%+18s %5d\n",
+                   "$filename[$i].$filemagic[$i]", $filesize[$i]);
+        }
+        else
+        {
+            read(IN, $tmp[$i], $filesize[$i]);
+            if ($opt_x)
+            {
+                open(OUT, ">$filename[$i].$filemagic[$i]");
+                binmode OUT;
+                print OUT $tmp[$i];
+                close(OUT);
+            }
+        }
+    }
+
+    close(IN);
+}
+
+if ($opt_c || $opt_a)
+{
+    die $message if @ARGV <= 1;
+    open(OUT, ">$ARGV[0]");
+    binmode OUT;
+    shift(@ARGV);
+
+    #----- write header -----
+    print OUT "ODAR";
+    print OUT pack("v", $major_version);
+    print OUT pack("v", $minor_version);
+    print OUT pack("V", $num + $#ARGV + 1);
+    print OUT pack("V", $tablesize);
+    print OUT pack("x48");
+    $size += 64;
+
+    #----- write table -----
+    $size += ($num + $#ARGV + 1) * $tablesize;
+
+    for ($i = 0; $i < $num; $i++)
+    {
+        print OUT $MAGIC{$filemagic[$i]};
+        print OUT pack("a128", $filename[$i]);
+        print OUT pack("V", $size);
+        print OUT pack("V", $filesize[$i]);
+        $size += $filesize[$i];
+        print OUT pack("x4");
+    }
+
+    foreach $file (@ARGV)
+    {
+        @extra = split(/\./, $file);
+        $extra[0] =~ s/.+\/// if ($extra[0] =~ /\//);
+        if ($MAGIC{$extra[1]})
+        {
+            print OUT $MAGIC{$extra[1]};
+        }
+        else
+        {
+            print OUT pack("x4");
+        }
+        print OUT $extra[0];
+        $i = 128 - length($extra[0]);
+        print OUT pack("x$i");
+        print OUT pack("V", $size);
+        @stat = stat $file;
+        print OUT pack("V", $stat[7]);
+        $size += $stat[7]; 
+        print OUT pack("x4");
+    }
+    #----- write data -----
+
+    for ($i = 0; $i < $num; $i++)
+    {
+        print OUT $tmp[$i];
+    }
+
+    foreach $file (@ARGV)
+    {
+        open(IN, "$file");
+        binmode IN;
+        @stat = stat $file;
+        read(IN, $tmpfile, $stat[7]);
+        print OUT $tmpfile;
+        close(IN);
+    }
+    close(OUT);
+}

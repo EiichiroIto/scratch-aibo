@@ -1,0 +1,264 @@
+
+        MTNファイルフォーマット
+
+■機能
+- Robot用モーションデータ情報を提供する
+
+■byte order
+        little endian
+
+■データ型定義
+
+type:Strings は以下のような構成となっている．
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+         0      1     uc      length
+         1      x     ch      characters
+
+    length:
+        文字列の文字数
+    characters:
+        文字列データ 
+
+■File Format
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+         0      1     ch      magic 0                         'O'
+         1      1     ch      magic 1                         'M'
+         2      1     ch      magic 2                         'T'
+         3      1     ch      magic 3                         'N'
+         4      24    cp      Section 0    
+         28     x     cp      Section 1
+         x      x     cp      Section 2    
+         x      x     cp      Section 3    
+
+    magic 0-3:
+        ファイルマジック
+
+
+    1. Section 0 
+    Section0 は基本的な項目のヘッダで，固定長である．
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+      0       4       lw      Section Number                  0
+      4       4       lw      Section Size                    24
+      8       4       lw      Number of Section               4
+      12      2       wd      Major Version                   1
+      14      2       wd      Minor Version                   2
+      16      2       wd      Number of keyframe              
+      18      2       wd      Frame Rate                      16
+      20      4       lw      Reserved                        0
+
+    Section Number:
+        SectionのシリアルNo.
+    Section Size:
+        Sectionの大きさ(byte)
+    Number of Section:
+        ファイルに含まれるSection数
+    Major Version:
+        Formatのメジャーバージョン番号
+    Minor Version:
+        Formatのマイナーバージョン番号
+    Number of keyframe:
+        ファイル内のkeyframeの数
+    Frame Rate:
+        Motionの再生速度 [msec/frame]
+
+
+    2. Section 1
+    Section1 は基本的な名称を記述するのヘッダで，可変長である．
+    ◆注意：Section Sizeが 4 byte区切り等にならない場合には，paddingする．
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+      0       4       lw      Section Number                  1
+      4       4       lw      Section Size                    
+      8       x       Strings Motion Name                     
+      x       x       Strings Creator
+      x       x       Strings Design Label
+      x       0-3             Padding                         0
+
+    Section Number:
+        SectionのシリアルNo.
+    Section Size:
+        Sectionの大きさ(byte)
+    Motion Name:
+        Motion Nameは，mtnファイル名の拡張子より前の文字列
+    Creator:
+        作者名
+    Design Label:
+        ロボットのデザインラベル
+
+
+    3. Section 2
+    Section2 はJoint Listを記述するのヘッダで，可変長である．
+    ◆注意：Section Sizeが 4 byte区切り等にならない場合には，paddingする．
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+      0       4       lw      Section Number                  2
+      4       4       lw      Section Size                    
+      8       2       wd      Number of Joint 
+      x       x       Strings PRM 0
+      x       x       Strings PRM 1
+      x       x       ....
+      x       x       Strings PRM (Number of Joint -1)
+      x       0-3             Padding                         0
+
+    Section Number:
+        SectionのシリアルNo.
+    Section Size:
+        Sectionの大きさ(byte)
+    Number of Joint:
+        ファイル内で扱うJointの数
+    PRM:
+        ファイル内で扱うJointのCPC Primitive Locator名．
+
+
+    4. Section 3
+    Section3 にはMotion Dataを記述し，可変長である．
+    ◆注意：Section Sizeが 4 byte区切り等にならない場合には，paddingする．
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+      0       4       lw      Section Number                  3
+      4       4       lw      Section Size                    
+      8       4       lw      Data Type                       0
+      12      x       cp      Data Section
+
+    Section Number:
+        SectionのシリアルNo.
+    Section Size:
+        Sectionの大きさ(byte)
+    Data Type:
+        Motion Data の種類(現在、0 のみをサポート）
+        0: 角度列データ
+        1: 軌跡データ
+
+    4-1. Data Section
+    Data Type 0 の場合，Data Fomratは以下のような構成となる．
+
+    [Roll] [Pitch] [Yaw]
+    [Joint Data]
+    {
+      [Number of Interpolate frame]
+      [Roll] [Pitch] [Yaw]
+      [Joint Data]
+    }  X (Number of Keyframe - 1)
+
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+      0       4       lw      Roll 
+      4       4       lw      Pitch    
+      8       4       lw      Yaw
+      12      x       cp      Joint Data Section
+      x       4       lw      Number of Interpolate frame
+                              .....
+    Roll:
+        Robot BODY座標系のroll [Micro radian]（右に傾くと正）
+    Pitch:
+        Robot BODY座標系pitch  [Micro radian]（後に傾くと正）
+    Yaw:
+        Robot BODY座標系のyaw  [Micro radian]（左に向くと正）
+    Joint Data Section:
+        ジョイントデータの値がSection 2のStrings PRM の順序で
+        記述される
+    Number of Interpolate frame:
+        前フレームとの補間フレーム数
+
+    4-1-1. Joint Data Section
+
+      offset  size    type    contents                        data
+      -------+-------+-------+-------------------------------+-------
+      0       4       lw      Joint Data 0
+      4       4       lw      Joint Data 1
+                              .....
+      x       4       lw      Joint Data   [Number of Joint]  
+
+    Joint data:
+        ジョイントのデータ の値を[Micro radian]で記述する．
+
+
+■実例
+ ADDRESS : +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B +C +D +E +F 0123456789ABCDEF   
+           +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B +C +D +E +F
+          -------------------------------------------------
+00000000 : 4F 4D 54 4E 00 00 00 00 18 00 00 00 04 00 00 00 : OMTN............
+00000010 : 01 00 02 00 06 00 10 00 00 00 00 00 01 00 00 00 : ................
+00000020 : 30 00 00 00 0D 61 5F 73 74 61 6E 64 23 73 69 74 : 0....a_stand#sit
+00000030 : 5F 53 10 53 6F 6E 79 20 43 6F 72 70 6F 72 61 74 : _S.Sony Corporat
+00000040 : 69 6F 6E 07 44 52 58 2D 39 31 30 00 02 00 00 00 : ion.DRX-910.....
+00000050 : F8 01 00 00 14 00 14 50 52 4D 3A 2F 72 31 2F 63 : .......PRM:/r1/c
+00000060 : 31 2D 4A 6F 69 6E 74 32 3A 6A 31 17 50 52 4D 3A : 1-Joint2:j1.PRM:
+00000070 : 2F 72 31 2F 63 31 2F 63 32 2D 4A 6F 69 6E 74 32 : /r1/c1/c2-Joint2
+00000080 : 3A 6A 32 1A 50 52 4D 3A 2F 72 31 2F 63 31 2F 63 : :j2.PRM:/r1/c1/c
+00000090 : 32 2F 63 33 2D 4A 6F 69 6E 74 32 3A 6A 33 1D 50 : 2/c3-Joint2:j3.P
+000000A0 : 52 4D 3A 2F 72 31 2F 63 31 2F 63 32 2F 63 33 2F : RM:/r1/c1/c2/c3/
+000000B0 : 63 34 2D 4A 6F 69 6E 74 32 3A 6A 34 1D 50 52 4D : c4-Joint2:j4.PRM
+000000C0 : 3A 2F 72 31 2F 63 31 2F 63 32 2F 63 33 2F 65 31 : :/r1/c1/c2/c3/e1
+000000D0 : 2D 4A 6F 69 6E 74 33 3A 6A 35 1D 50 52 4D 3A 2F : -Joint3:j5.PRM:/
+000000E0 : 72 31 2F 63 31 2F 63 32 2F 63 33 2F 65 32 2D 4A : r1/c1/c2/c3/e2-J
+000000F0 : 6F 69 6E 74 33 3A 6A 36 14 50 52 4D 3A 2F 72 32 : oint3:j6.PRM:/r2
+00000100 : 2F 63 31 2D 4A 6F 69 6E 74 32 3A 6A 31 17 50 52 : /c1-Joint2:j1.PR
+00000110 : 4D 3A 2F 72 32 2F 63 31 2F 63 32 2D 4A 6F 69 6E : M:/r2/c1/c2-Join
+00000120 : 74 32 3A 6A 32 1A 50 52 4D 3A 2F 72 32 2F 63 31 : t2:j2.PRM:/r2/c1
+00000130 : 2F 63 32 2F 63 33 2D 4A 6F 69 6E 74 32 3A 6A 33 : /c2/c3-Joint2:j3
+00000140 : 14 50 52 4D 3A 2F 72 33 2F 63 31 2D 4A 6F 69 6E : .PRM:/r3/c1-Join
+00000150 : 74 32 3A 6A 31 17 50 52 4D 3A 2F 72 33 2F 63 31 : t2:j1.PRM:/r3/c1
+00000160 : 2F 63 32 2D 4A 6F 69 6E 74 32 3A 6A 32 1A 50 52 : /c2-Joint2:j2.PR
+00000170 : 4D 3A 2F 72 33 2F 63 31 2F 63 32 2F 63 33 2D 4A : M:/r3/c1/c2/c3-J
+00000180 : 6F 69 6E 74 32 3A 6A 33 14 50 52 4D 3A 2F 72 34 : oint2:j3.PRM:/r4
+00000190 : 2F 63 31 2D 4A 6F 69 6E 74 32 3A 6A 31 17 50 52 : /c1-Joint2:j1.PR
+000001A0 : 4D 3A 2F 72 34 2F 63 31 2F 63 32 2D 4A 6F 69 6E : M:/r4/c1/c2-Join
+000001B0 : 74 32 3A 6A 32 1A 50 52 4D 3A 2F 72 34 2F 63 31 : t2:j2.PRM:/r4/c1
+000001C0 : 2F 63 32 2F 63 33 2D 4A 6F 69 6E 74 32 3A 6A 33 : /c2/c3-Joint2:j3
+000001D0 : 14 50 52 4D 3A 2F 72 35 2F 63 31 2D 4A 6F 69 6E : .PRM:/r5/c1-Join
+000001E0 : 74 32 3A 6A 31 17 50 52 4D 3A 2F 72 35 2F 63 31 : t2:j1.PRM:/r5/c1
+000001F0 : 2F 63 32 2D 4A 6F 69 6E 74 32 3A 6A 32 1A 50 52 : /c2-Joint2:j2.PR
+00000200 : 4D 3A 2F 72 35 2F 63 31 2F 63 32 2F 63 33 2D 4A : M:/r5/c1/c2/c3-J
+00000210 : 6F 69 6E 74 32 3A 6A 33 14 50 52 4D 3A 2F 72 36 : oint2:j3.PRM:/r6
+00000220 : 2F 63 31 2D 4A 6F 69 6E 74 32 3A 6A 31 14 50 52 : /c1-Joint2:j1.PR
+00000230 : 4D 3A 2F 72 36 2F 63 32 2D 4A 6F 69 6E 74 32 3A : M:/r6/c2-Joint2:
+00000240 : 6A 32 00 00 03 00 00 00 48 02 00 00 00 00 00 00 : j2......H.......
+00000250 : 00 00 00 00 5A 88 00 00 00 00 00 00 00 00 00 00 : ....Z...........
+00000260 : 00 00 00 00 00 00 00 00 78 33 FF FF 00 00 00 00 : ........x3......
+00000270 : 00 00 00 00 3B 56 FD FF 00 00 00 00 50 FD 07 00 : ....;V......P...
+00000280 : D3 BB FF FF 00 00 00 00 6D A8 06 00 3B 56 FD FF : ........m...;V..
+00000290 : 00 00 00 00 51 FD 07 00 00 00 00 00 00 00 00 00 : ....Q...........
+000002A0 : 6E A8 06 00 00 00 00 00 00 00 00 00 3C 00 00 00 : n...........<...
+000002B0 : 00 00 00 00 F0 66 FE FF 00 00 00 00 28 36 F7 FF : ..........(6..
+000002C0 : 00 00 00 00 00 00 00 00 78 33 FF FF 00 00 00 00 : ........x3......
+000002D0 : 00 00 00 00 BE 14 F5 FF 00 00 00 00 5D A0 1E 00 : ............]...
+000002E0 : CD AD F6 FF 00 00 00 00 D2 4C 19 00 EB 58 F5 FF : .........L..�X..
+000002F0 : 00 00 00 00 5D A0 1E 00 CE AD F6 FF 00 00 00 00 : ....]...........
+00000300 : D2 4C 19 00 00 00 00 00 00 00 00 00 32 00 00 00 : .L..........2...
+00000310 : 00 00 00 00 A8 FE 03 00 00 00 00 00 28 36 F7 FF : ............(6..
+00000320 : 00 00 00 00 00 00 00 00 78 33 FF FF 00 00 00 00 : ........x3......
+00000330 : 00 00 00 00 CE AD F6 FF 00 00 00 00 0D A3 16 00 : ................
+00000340 : 26 AF F2 FF 00 00 00 00 08 26 27 00 CE AD F6 FF : &........&'.....
+00000350 : 00 00 00 00 0D A3 16 00 26 AF F2 FF 00 00 00 00 : ........&.......
+00000360 : 08 26 27 00 00 00 00 00 00 00 00 00 28 00 00 00 : .&'.........(...
+00000370 : 00 00 00 00 E2 54 01 00 00 00 00 00 80 43 F8 FF : ....禝.......C..
+00000380 : 00 00 00 00 00 00 00 00 78 33 FF FF 00 00 00 00 : ........x3......
+00000390 : 00 00 00 00 11 F6 F7 FF 00 00 00 00 99 D9 1E 00 : .....・.....叨..
+000003A0 : AA 50 ED FF 00 00 00 00 05 92 25 00 B0 02 F8 FF : .P........%.....
+000003B0 : 00 00 00 00 5D A0 1E 00 9B 5B ED FF 00 00 00 00 : ....]...媼......
+000003C0 : 05 92 25 00 00 00 00 00 00 00 00 00 32 00 00 00 : ..%.........2...
+000003D0 : 00 00 00 00 30 CB 04 00 00 00 00 00 70 C9 F8 FF : ....0.......p...
+000003E0 : 00 00 00 00 00 00 00 00 78 33 FF FF 00 00 00 00 : ........x3......
+000003F0 : 00 00 00 00 95 87 FA FF 00 00 00 00 B2 6F 15 00 : ....芙.......o..
+00000400 : 78 C0 EA FF 00 00 00 00 21 C9 24 00 76 AC FA FF : x.......!.$.v...
+00000410 : 00 00 00 00 2A 4E 15 00 15 C6 EA FF 00 00 00 00 : ....*N..........
+00000420 : 21 C9 24 00 00 00 00 00 00 00 00 00 64 00 00 00 : !.$.........d...
+00000430 : 00 00 00 00 AA 85 08 00 00 00 00 00 93 57 F9 FF : ............展..
+00000440 : 00 00 00 00 00 00 00 00 78 33 FF FF 00 00 00 00 : ........x3......
+00000450 : 00 00 00 00 00 00 00 00 00 00 00 00 C4 A9 02 00 : ................
+00000460 : 12 08 E8 FF 00 00 00 00 E4 F3 23 00 19 D7 FF FF : ........蔘#.....
+00000470 : 00 00 00 00 AE D2 02 00 0F 08 E8 FF 00 00 00 00 : ................
+00000480 : EC F3 23 00 00 00 00 00 00 00 00 00             : ��#.........
+          -------------------------------------------------
+           +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B +C +D +E +F
