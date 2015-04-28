@@ -336,9 +336,8 @@ TCPReceptor::SensorUpdate(const char *msg)
 OStatus
 TCPReceptor::SensorUpdate(int index, const char *msg)
 {
-  OSYSPRINT(( "SensorUpdate(%d,%s)\n", index, msg ));
-
   if (connection[index].state != CONNECTION_CONNECTED) return oFAIL;
+  OSYSPRINT(( "SensorUpdate(%d,%s)\n", index, msg ));
   int len = strlen(msg);
   byte *p = connection[index].sendData;
   p[0] = 0;
