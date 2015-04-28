@@ -20,6 +20,8 @@
 #include "JPEGEncoder.h"
 #include "W3AIBOConfig.h"
 #include "def.h"
+#include "ControlInfo.h"
+#include "VisionInfo.h"
 
 class W3AIBO : public OObject {
 public:
@@ -35,6 +37,8 @@ public:
     virtual OStatus DoDestroy(const OSystemEvent& event);
 
     void NotifyImage(const ONotifyEvent& event);
+    void NotifyResult(const ONotifyEvent& event);
+    void NotifyObjInfo( const ONotifyEvent& event );
 
     void ListenCont    (ANTENVMSG msg);
     void ReceiveCont   (ANTENVMSG msg);
@@ -56,15 +60,20 @@ private:
     OStatus Close     (int index);
 
     void ProcessHTTPRequest(int index);
+    void TextResponse(int index, const char *text, char *type);
+    void BallResponse      (int index);
     void JsonResponse      (int index);
     void HTTPResponse      (int index, HTTPStatus st);
     void SendMoNet(int cmd);
     void SendFace(int cmd);
+    void SendControl(EAiboControlID id);
 
     antStackRef    ipstackRef;
     HTTP           http;
     JPEGEncoder    jpegEncoder;
     TCPConnection  connection[W3AIBO_CONNECTION_MAX];
+    char cdtInfo[4096];
+    FoundInfo ball;
 };
 
 #endif // W3AIBO_h_DEFINED

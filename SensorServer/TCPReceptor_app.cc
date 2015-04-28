@@ -292,7 +292,7 @@ TCPReceptor::ProcessReceivedMessage( int index, const byte* buf, int size )
 void
 TCPReceptor::NotifyObjInfo( const ONotifyEvent& event )
 {
-  const int count_max = 20;
+  const int count_max = 10;
   static int count = count_max;
   char tmpbuf[128];
 

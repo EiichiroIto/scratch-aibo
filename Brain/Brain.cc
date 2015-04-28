@@ -98,6 +98,8 @@ Brain::DoStart(const OSystemEvent& event)
     ENABLE_ALL_SUBJECT;
     ASSERT_READY_TO_ALL_OBSERVER;
 
+    SendCdt();
+
     return oSUCCESS;
 }
 
@@ -353,15 +355,8 @@ Brain::NotifyControl( const ONotifyEvent& event )
 	    subject[sbjControlResult]->NotifyObservers();
 	    break;
 	case CtID_GetCdt:
-	    size = cdtfile.ToString( NULL );
-	    if ( size < sizeof result.sValue ) {
-		cdtfile.ToString( result.sValue );
-	    } else {
-		*result.sValue = '\0';
-	    }
-	    subject[sbjControlResult]->SetData( &result, sizeof(result) );
-	    subject[sbjControlResult]->NotifyObservers();
-	    break;
+	  SendCdt();
+	  break;
 	case CtID_ReadCdt:
 	    cdtfile.Read( CDT_CONFIG );
 	    cdtfile.SetCdtVectorData( fbkID );
@@ -672,4 +667,19 @@ Brain::ClearLastCmds()
     lastCmds.headCmd = hcmdNone;
     lastCmds.faceCmd = fcmdNone;
     lastCmds.internalCmd = icmdNone;
+}
+
+void
+Brain::SendCdt()
+{
+  ControlInfo result;
+  result.id = CtID_GetCdt;
+  int size = cdtfile.ToString( NULL );
+  if ( size < sizeof result.sValue ) {
+    cdtfile.ToString( result.sValue );
+  } else {
+    *result.sValue = '\0';
+  }
+  subject[sbjControlResult]->SetData( &result, sizeof(result) );
+  subject[sbjControlResult]->NotifyObservers();
 }

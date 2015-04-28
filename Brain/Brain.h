@@ -86,6 +86,7 @@ private:
     void ConfigFromString( const char *buf );
     bool ReadDefartConfig( const char *path );
     void ClearLastCmds();
+    void SendCdt();
 
     // -----
     OPrimitiveID        fbkID;

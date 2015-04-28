@@ -21,5 +21,6 @@
 #define W3AIBO_LAYER_LR_URI "/layerlr"
 #define W3AIBO_MONET_URI "/monet?cmd="
 #define W3AIBO_FACE_URI "/face?cmd="
+#define W3AIBO_GETCDT_URI "/getcdt"
 
 #endif // W3AIBOConfig_h_DEFINED

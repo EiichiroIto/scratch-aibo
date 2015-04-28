@@ -20,10 +20,10 @@
 #include <TCPEndpointMsg.h>
 #include "W3AIBO.h"
 #include "entry.h"
-#include "ControlInfo.h"
 
 W3AIBO::W3AIBO()
 {
+  cdtInfo[0]='\0';
 }
 
 OStatus
@@ -480,7 +480,7 @@ W3AIBO::ProcessHTTPRequest(int index)
     } 
 
     if (strcmp(uri, W3AIBO_DEFAULT_URI) == 0) {
-      JsonResponse(index);
+      BallResponse(index);
       return;
     } else if (strcmp(uri, W3AIBO_LAYER_C_URI) == 0) {
       connection[index].layer = ofbkimageLAYER_C;
@@ -488,12 +488,15 @@ W3AIBO::ProcessHTTPRequest(int index)
     } else if (strncmp(uri, W3AIBO_MONET_URI, strlen(W3AIBO_MONET_URI)) == 0) {
       int cmd = atoi(&uri[strlen(W3AIBO_MONET_URI)]);
       SendMoNet(cmd);
-      JsonResponse(index);
+      BallResponse(index);
       return;
     } else if (strncmp(uri, W3AIBO_FACE_URI, strlen(W3AIBO_FACE_URI)) == 0) {
       int cmd = atoi(&uri[strlen(W3AIBO_FACE_URI)]);
       SendFace(cmd);
-      JsonResponse(index);
+      BallResponse(index);
+      return;
+    } else if (strcmp(uri, W3AIBO_GETCDT_URI) == 0) {
+      TextResponse(index, cdtInfo, "text/plain");
       return;
     } else if (strcmp(uri, W3AIBO_LAYER_M_URI) == 0) {
 
@@ -524,6 +527,99 @@ W3AIBO::ProcessHTTPRequest(int index)
 }
 
 void
+W3AIBO::TextResponse(int index, const char *text, char *type)
+{
+  char* ptr;
+  int len;
+
+  ptr = (char*)connection[index].sendData;
+  connection[index].sendSize = 0;
+    
+  len = http.Status(ptr, HTTP_OK);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_SERVER, "W3AIBO/0.1");
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_CONTENT_TYPE, type);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_HEADER_END, NULL);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  strcpy(ptr, text);
+  len = strlen(text);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  SendText(index);
+}
+
+void
+W3AIBO::BallResponse(int index)
+{
+  char* ptr;
+  int len;
+
+  ptr = (char*)connection[index].sendData;
+  connection[index].sendSize = 0;
+    
+  len = http.Status(ptr, HTTP_OK);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_SERVER, "W3AIBO/0.1");
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_CONTENT_TYPE, "text/javascript");
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_HEADER_END, NULL);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  *ptr++ = '{';
+  connection[index].sendSize ++;
+
+  strcpy(ptr, "\"ball\":");
+  len = strlen(ptr);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  if (ball.found) {
+    strcpy(ptr, "true");
+  } else {
+    strcpy(ptr, "false");
+  }
+  len = strlen(ptr);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  *ptr++ = '}';
+  connection[index].sendSize ++;
+
+  *ptr++ = 0;
+  SendText(index);
+
+#if 0
+  if ( ball->found ) {
+      sprintf(tmpbuf, "sensor-update ball true ballPan %.1f ballTilt %.1f ballDistance %d",
+	      ball->objPos.pan, ball->objPos.tilt, ball->distance);
+    } else {
+      sprintf(tmpbuf, "sensor-update ball false");
+    }
+    SensorUpdate(tmpbuf);
+  }
+#endif
+}
+
+void
 W3AIBO::JsonResponse(int index)
 {
   char* ptr;
@@ -549,7 +645,7 @@ W3AIBO::JsonResponse(int index)
   connection[index].sendSize += len;
   ptr += len;
 
-  strcpy(ptr, "{ \"a\":[\"b\":123] }");
+  strcpy(ptr, cdtInfo);
   len = strlen(ptr);
   connection[index].sendSize += len;
   ptr += len;
@@ -659,4 +755,36 @@ W3AIBO::SendFace(int cmd)
   ci.iValue = cmd;
   subject[sbjControl]->SetData( &ci, sizeof(ci) );
   subject[sbjControl]->NotifyObservers();
+}
+
+void
+W3AIBO::SendControl(EAiboControlID id)
+{
+  OSYSPRINT(("SendControl:id=%d\n", id));
+  ControlInfo ci;
+  ci.id = id;
+  ci.iValue = 0;
+  subject[sbjControl]->SetData( &ci, sizeof(ci) );
+  subject[sbjControl]->NotifyObservers();
+}
+
+void
+W3AIBO::NotifyResult(const ONotifyEvent& event)
+{
+  ControlInfo *r = (ControlInfo*)event.Data(0);
+  OSYSPRINT(("NotifyResult(%d)", r->id));
+
+  if (r->id == CtID_GetCdt) {
+    strcpy(cdtInfo, r->sValue);
+  }
+  observer[event.ObsIndex()]->AssertReady(event.SenderID());
+}
+
+void
+W3AIBO::NotifyObjInfo( const ONotifyEvent& event )
+{
+  // Visionから制御情報を受け取った
+  const CdtInfo *cdtInfo = (CdtInfo*) event.Data(0);
+  ball = cdtInfo->foundInfo[IO_BALL];
+  observer[event.ObsIndex()]->AssertReady();
 }
