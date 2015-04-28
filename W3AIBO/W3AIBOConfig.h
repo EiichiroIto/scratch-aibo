@@ -19,5 +19,7 @@
 #define W3AIBO_LAYER_L_URI  "/layerl"
 #define W3AIBO_LAYER_MR_URI "/layermr"
 #define W3AIBO_LAYER_LR_URI "/layerlr"
+#define W3AIBO_MONET_URI "/monet?cmd="
+#define W3AIBO_FACE_URI "/face?cmd="
 
 #endif // W3AIBOConfig_h_DEFINED

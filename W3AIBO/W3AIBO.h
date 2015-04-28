@@ -58,6 +58,8 @@ private:
     void ProcessHTTPRequest(int index);
     void JsonResponse      (int index);
     void HTTPResponse      (int index, HTTPStatus st);
+    void SendMoNet(int cmd);
+    void SendFace(int cmd);
 
     antStackRef    ipstackRef;
     HTTP           http;

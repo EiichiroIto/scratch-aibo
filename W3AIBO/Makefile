@@ -27,7 +27,9 @@ CXXFLAGS= \
 	-I$(OPENRSDK_ROOT)/OPEN_R/include/R4000 \
 	-I$(OPENRSDK_ROOT)/OPEN_R/include/MCOOP \
 	-I$(OPENRSDK_ROOT)/OPEN_R/include \
-	-I$(LIBJPEGDIR)
+	-I$(LIBJPEGDIR) \
+	-I../common/include \
+	-D$(AIBO_MODEL)
 
 #
 # JPEGEncoder::ReconstructAndConvertYCbCr()

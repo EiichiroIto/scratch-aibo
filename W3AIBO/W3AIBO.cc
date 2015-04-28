@@ -20,6 +20,7 @@
 #include <TCPEndpointMsg.h>
 #include "W3AIBO.h"
 #include "entry.h"
+#include "ControlInfo.h"
 
 W3AIBO::W3AIBO()
 {
@@ -484,6 +485,16 @@ W3AIBO::ProcessHTTPRequest(int index)
     } else if (strcmp(uri, W3AIBO_LAYER_C_URI) == 0) {
       connection[index].layer = ofbkimageLAYER_C;
       connection[index].reconstruction = false;
+    } else if (strncmp(uri, W3AIBO_MONET_URI, strlen(W3AIBO_MONET_URI)) == 0) {
+      int cmd = atoi(&uri[strlen(W3AIBO_MONET_URI)]);
+      SendMoNet(cmd);
+      JsonResponse(index);
+      return;
+    } else if (strncmp(uri, W3AIBO_FACE_URI, strlen(W3AIBO_FACE_URI)) == 0) {
+      int cmd = atoi(&uri[strlen(W3AIBO_FACE_URI)]);
+      SendFace(cmd);
+      JsonResponse(index);
+      return;
     } else if (strcmp(uri, W3AIBO_LAYER_M_URI) == 0) {
 
         connection[index].layer = ofbkimageLAYER_M;
@@ -626,4 +637,26 @@ W3AIBO::HTTPResponse(int index, HTTPStatus st)
     *ptr = 0;
     DPRINTF(("%s", connection[index].sendData));
 #endif
+}
+
+void
+W3AIBO::SendMoNet(int cmd)
+{
+  OSYSPRINT(("SendMoNet:cmd=%d\n", cmd));
+  ControlInfo ci;
+  ci.id = CtID_MonetSync;
+  ci.iValue = cmd;
+  subject[sbjControl]->SetData( &ci, sizeof(ci) );
+  subject[sbjControl]->NotifyObservers();
+}
+
+void
+W3AIBO::SendFace(int cmd)
+{
+  OSYSPRINT(("SendFace:cmd=%d\n", cmd));
+  ControlInfo ci;
+  ci.id = CtID_Face;
+  ci.iValue = cmd;
+  subject[sbjControl]->SetData( &ci, sizeof(ci) );
+  subject[sbjControl]->NotifyObservers();
 }
