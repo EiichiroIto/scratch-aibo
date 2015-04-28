@@ -11,7 +11,7 @@
 
 LANG=
 LANGUAGE=
-COMPONENTS=Brain MoNet MotionAgents Vision Face PowerMonitor SensorServer W3AIBO
+COMPONENTS=Brain MoNet MotionAgents Vision Face PowerMonitor TinyFTPD SensorServer W3AIBO
 INSTALLDIR=$(shell pwd)/MS
 TARGETS=all install clean
 RELEASEDIR=/defart/release

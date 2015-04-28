@@ -481,6 +481,9 @@ W3AIBO::ProcessHTTPRequest(int index)
     if (strcmp(uri, W3AIBO_DEFAULT_URI) == 0) {
       JsonResponse(index);
       return;
+    } else if (strcmp(uri, W3AIBO_LAYER_C_URI) == 0) {
+      connection[index].layer = ofbkimageLAYER_C;
+      connection[index].reconstruction = false;
     } else if (strcmp(uri, W3AIBO_LAYER_M_URI) == 0) {
 
         connection[index].layer = ofbkimageLAYER_M;

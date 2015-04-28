@@ -51,6 +51,9 @@ private:
     byte* Allocate();
     void  Free(byte* buf);
 
+    void ConvertCDT(OFbkImageVectorData* imageVec,
+                      OFbkImageLayer layer, byte* image,
+                      int* width, int* height);
     void ConvertYCbCr(OFbkImageVectorData* imageVec,
                       OFbkImageLayer layer, byte* image,
                       int* width, int* height);

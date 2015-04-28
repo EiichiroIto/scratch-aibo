@@ -62,7 +62,10 @@ JPEGEncoder::GetJPEG(OFbkImageVectorData* imageVec,
                      int quality, byte** jpeg, int* size)
 {
     int w, h;
-    if (reconstruction == true) {
+
+    if (layer == ofbkimageLAYER_C) {
+        ConvertCDT(imageVec, layer, pixelInterleavedYCbCr, &w, &h);
+    } else if (reconstruction == true) {
         ReconstructAndConvertYCbCr(imageVec, layer,
                                    pixelInterleavedYCbCr, &w, &h);
     } else {
@@ -110,6 +113,34 @@ void
 JPEGEncoder::Free(byte* buf)
 {
     freeJpegBufList.push_back(buf);
+}
+
+void
+JPEGEncoder::ConvertCDT(OFbkImageVectorData* imageVec,
+			OFbkImageLayer layer, byte* image,
+			int* width, int* height)
+{
+    OFbkImageInfo* info = imageVec->GetInfo(layer);
+    byte*          data = imageVec->GetData(layer);
+
+    OFbkImage cdtImg(info, data, ofbkimageBAND_CDT);
+
+    int w = cdtImg.Width();
+    int h = cdtImg.Height();
+
+    byte* iptr = image;
+    byte* line  = cdtImg.Pointer();
+    
+    for (int y = 0; y < h; y++) {
+      for (int x = 0; x < w; x++) {
+	*iptr++ = (*line++ & ocdtCHANNEL0) ? 0 : 255;     // Y
+	*iptr++ = 127;    // Cb
+	*iptr++ = 127;    // Cr
+      }
+    }
+
+    *width  = w;
+    *height = h;
 }
 
 void

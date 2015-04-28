@@ -68,7 +68,6 @@ install: all
 	gzip -c w3aibo.bin > $(INSTALLDIR)/OPEN-R/MW/OBJS/W3AIBO.BIN
 
 clean:
-	make -C $(LIBJPEGDIR) clean
 	rm -f *.o *.bin *.elf *.snap.cc *~
 	rm -f W3AIBOStub.h W3AIBOStub.cc def.h entry.h
 	rm -f $(INSTALLDIR)/OPEN-R/MW/OBJS/W3AIBO.BIN

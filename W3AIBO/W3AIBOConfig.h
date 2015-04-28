@@ -14,10 +14,9 @@
 
 #define W3AIBO_PORT 8080
 #define W3AIBO_DEFAULT_URI  "/"
-#define W3AIBO_LAYER_H_URI  "/layerh"
+#define W3AIBO_LAYER_C_URI  "/layerc"
 #define W3AIBO_LAYER_M_URI  "/layerm"
 #define W3AIBO_LAYER_L_URI  "/layerl"
-#define W3AIBO_LAYER_HR_URI "/layerhr"
 #define W3AIBO_LAYER_MR_URI "/layermr"
 #define W3AIBO_LAYER_LR_URI "/layerlr"
 
