@@ -140,7 +140,7 @@ W3AIBO::InitTCPConnection(int index)
     // Initialize image info
     //
     connection[index].imageRequested = false;
-    connection[index].layer          = ofbkimageLAYER_H;
+    connection[index].layer          = ofbkimageLAYER_M;
     connection[index].reconstruction = false;
     connection[index].quality        = 75;
     connection[index].jpegData       = 0;
@@ -383,9 +383,9 @@ W3AIBO::SendImageCont(ANTENVMSG msg)
 }
 
 OStatus
-W3AIBO::SendError(int index)
+W3AIBO::SendText(int index)
 {
-    OSYSDEBUG(("W3AIBO::SendError(%d)\n", index));
+    OSYSDEBUG(("W3AIBO::SendText(%d)\n", index));
 
     if (connection[index].sendSize == 0 ||
         connection[index].state != CONNECTION_CONNECTED) return oFAIL;
@@ -396,7 +396,7 @@ W3AIBO::SendError(int index)
     sendMsg.continuation = (void*)index;
 
     sendMsg.Send(ipstackRef, myOID_,
-                 Extra_Entry[entrySendErrorCont],
+                 Extra_Entry[entrySendTextCont],
                  sizeof(TCPEndpointSendMsg));
 
     connection[index].state = CONNECTION_SENDING;
@@ -406,16 +406,16 @@ W3AIBO::SendError(int index)
 }
 
 void
-W3AIBO::SendErrorCont(ANTENVMSG msg)
+W3AIBO::SendTextCont(ANTENVMSG msg)
 {
     TCPEndpointSendMsg* sendMsg = (TCPEndpointSendMsg*)antEnvMsg::Receive(msg);
     int index = (int)(sendMsg->continuation);
 
-    OSYSDEBUG(("W3AIBO::SendErrorCont(%d)\n", index));
+    OSYSDEBUG(("W3AIBO::SendTextCont(%d)\n", index));
 
     if (sendMsg->error != TCP_SUCCESS) {
         OSYSLOG1((osyslogERROR, "%s : %s %d",
-                  "W3AIBO::SendErrorCont()",
+                  "W3AIBO::SendTextCont()",
                   "FAILED. sendMsg->error", sendMsg->error));
         Close(index);
         return;
@@ -478,12 +478,9 @@ W3AIBO::ProcessHTTPRequest(int index)
         return;
     } 
 
-    if (strcmp(uri, W3AIBO_DEFAULT_URI) == 0 ||
-        strcmp(uri, W3AIBO_LAYER_H_URI) == 0) {
-
-        connection[index].layer = ofbkimageLAYER_H;
-        connection[index].reconstruction = false;
-
+    if (strcmp(uri, W3AIBO_DEFAULT_URI) == 0) {
+      JsonResponse(index);
+      return;
     } else if (strcmp(uri, W3AIBO_LAYER_M_URI) == 0) {
 
         connection[index].layer = ofbkimageLAYER_M;
@@ -493,11 +490,6 @@ W3AIBO::ProcessHTTPRequest(int index)
 
         connection[index].layer = ofbkimageLAYER_L;
         connection[index].reconstruction = false;
-
-    } else if (strcmp(uri, W3AIBO_LAYER_HR_URI) == 0) {
-
-        connection[index].layer = ofbkimageLAYER_H;
-        connection[index].reconstruction = true;
 
     } else if (strcmp(uri, W3AIBO_LAYER_MR_URI) == 0) {
 
@@ -515,6 +507,40 @@ W3AIBO::ProcessHTTPRequest(int index)
     }
 
     connection[index].imageRequested = true;
+}
+
+void
+W3AIBO::JsonResponse(int index)
+{
+  char* ptr;
+  int len;
+
+  ptr = (char*)connection[index].sendData;
+  connection[index].sendSize = 0;
+    
+  len = http.Status(ptr, HTTP_OK);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_SERVER, "W3AIBO/0.1");
+  connection[index].sendSize += len;
+  ptr += len;
+
+
+  len = http.HeaderField(ptr, HTTP_CONTENT_TYPE, "text/javascript");
+  connection[index].sendSize += len;
+  ptr += len;
+
+  len = http.HeaderField(ptr, HTTP_HEADER_END, NULL);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  strcpy(ptr, "{ \"a\":[\"b\":123] }");
+  len = strlen(ptr);
+  connection[index].sendSize += len;
+  ptr += len;
+
+  SendText(index);
 }
 
 void
@@ -536,7 +562,7 @@ W3AIBO::HTTPResponse(int index, HTTPStatus st)
 
     if (st == HTTP_OK) {
 
-        len = http.HeaderField(ptr, HTTP_CONTENT_TYPE, "application/octet-stream");
+        len = http.HeaderField(ptr, HTTP_CONTENT_TYPE, "image/jpeg");
         connection[index].sendSize += len;
         ptr += len;
 
@@ -590,7 +616,7 @@ W3AIBO::HTTPResponse(int index, HTTPStatus st)
 
         }
 
-        SendError(index);
+        SendText(index);
     }
 
 #ifdef OPENR_DEBUG

@@ -40,7 +40,7 @@ public:
     void ReceiveCont   (ANTENVMSG msg);
     void SendHeaderCont(ANTENVMSG msg);
     void SendImageCont (ANTENVMSG msg);
-    void SendErrorCont (ANTENVMSG msg);
+    void SendTextCont  (ANTENVMSG msg);
     void CloseCont     (ANTENVMSG msg);
 
 private:
@@ -52,10 +52,11 @@ private:
     OStatus Receive   (int index);
     OStatus SendHeader(int index);
     OStatus SendImage (int index);
-    OStatus SendError (int index);
+    OStatus SendText  (int index);
     OStatus Close     (int index);
 
     void ProcessHTTPRequest(int index);
+    void JsonResponse      (int index);
     void HTTPResponse      (int index, HTTPStatus st);
 
     antStackRef    ipstackRef;
