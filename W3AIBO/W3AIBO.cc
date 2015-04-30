@@ -495,8 +495,13 @@ W3AIBO::ProcessHTTPRequest(int index)
       SendFace(cmd);
       BallResponse(index);
       return;
-    } else if (strcmp(uri, W3AIBO_GETCDT_URI) == 0) {
-      TextResponse(index, cdtInfo, "text/plain");
+    } else if (strncmp(uri, W3AIBO_CONTROL_URI, strlen(W3AIBO_CONTROL_URI)) == 0) {
+      int cmd = atoi(&uri[strlen(W3AIBO_CONTROL_URI)]);
+      SendControl((EAiboControlID) cmd);
+      BallResponse(index);
+      return;
+    } else if (strcmp(uri, W3AIBO_CDT_URI) == 0) {
+      JsonResponse(index);
       return;
     } else if (strcmp(uri, W3AIBO_LAYER_M_URI) == 0) {
 
