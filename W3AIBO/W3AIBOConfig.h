@@ -22,6 +22,7 @@
 #define W3AIBO_MONET_URI "/monet?cmd="
 #define W3AIBO_FACE_URI "/face?cmd="
 #define W3AIBO_CONTROL_URI "/control?cmd="
+#define W3AIBO_HEAD_URI "/head?cmd="
 #define W3AIBO_CDT_URI "/cdt"
 
 #endif // W3AIBOConfig_h_DEFINED

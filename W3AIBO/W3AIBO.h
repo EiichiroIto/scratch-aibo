@@ -67,6 +67,7 @@ private:
     void SendMoNet(int cmd);
     void SendFace(int cmd);
     void SendControl(EAiboControlID id);
+    void SendHead(int hcmd, int arg);
 
     antStackRef    ipstackRef;
     HTTP           http;

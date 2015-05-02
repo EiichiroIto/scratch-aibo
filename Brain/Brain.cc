@@ -291,7 +291,7 @@ Brain::NotifyControl( const ONotifyEvent& event )
         ; // do nothing
     } else {
 	ControlInfo *ci = (ControlInfo*) event.Data(0);
-	ControlInfo result;
+	static ControlInfo result;
 	result.id = ci->id;
 	*result.sValue = '\0';
 	if ( verboseMode >= 9 ) {
@@ -354,14 +354,12 @@ Brain::NotifyControl( const ONotifyEvent& event )
 	    subject[sbjControlResult]->SetData( &result, sizeof(result) );
 	    subject[sbjControlResult]->NotifyObservers();
 	    break;
-	case CtID_GetCdt:
-	  SendCdt();
-	  break;
 	case CtID_ReadCdt:
 	    cdtfile.Read( CDT_CONFIG );
 	    cdtfile.SetCdtVectorData( fbkID );
 	    cdtfile.Print();
 	    FaceExecute( fcmdEarMove1 );
+	    SendCdt();
 	    break;
 	case CtID_Head:
 	    HeadingPosition next;
@@ -672,7 +670,7 @@ Brain::ClearLastCmds()
 void
 Brain::SendCdt()
 {
-  ControlInfo result;
+  static ControlInfo result;
   result.id = CtID_GetCdt;
   int size = cdtfile.ToString( NULL );
   if ( size < sizeof result.sValue ) {

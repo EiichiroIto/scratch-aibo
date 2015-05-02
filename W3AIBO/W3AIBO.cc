@@ -500,6 +500,11 @@ W3AIBO::ProcessHTTPRequest(int index)
       SendControl((EAiboControlID) cmd);
       BallResponse(index);
       return;
+    } else if (strncmp(uri, W3AIBO_HEAD_URI, strlen(W3AIBO_HEAD_URI)) == 0) {
+      int cmd = atoi(&uri[strlen(W3AIBO_HEAD_URI)]);
+      SendHead(cmd, 0);
+      BallResponse(index);
+      return;
     } else if (strcmp(uri, W3AIBO_CDT_URI) == 0) {
       JsonResponse(index);
       return;
@@ -769,6 +774,22 @@ W3AIBO::SendControl(EAiboControlID id)
   ControlInfo ci;
   ci.id = id;
   ci.iValue = 0;
+  subject[sbjControl]->SetData( &ci, sizeof(ci) );
+  subject[sbjControl]->NotifyObservers();
+}
+
+void
+W3AIBO::SendHead(int hcmd, int arg)
+{
+  OSYSPRINT(("SendHead:hcmd=%d,arg=%d\n", hcmd, arg));
+  ControlInfo ci;
+  ci.id = CtID_Head;
+  ci.iValue = hcmd;
+  ci.i2Value = arg;
+  ci.dValue2[0] = 0;
+  ci.dValue2[1] = 0;
+  ci.dValue2[2] = 0;
+  ci.dValue2[3] = 0;
   subject[sbjControl]->SetData( &ci, sizeof(ci) );
   subject[sbjControl]->NotifyObservers();
 }
